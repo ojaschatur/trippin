@@ -4,7 +4,23 @@ import { motion } from "framer-motion";
 import { ArrowRight, ShieldCheck, Users, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+import { useActionState } from "react";
+import { useFormStatus } from "react-dom";
+import { submitWaitlist } from "@/actions/waitlist";
+
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <Button size="lg" type="submit" className="shrink-0" disabled={pending}>
+      {pending ? "Joining..." : "Get Early Access"}
+      {!pending && <ArrowRight className="h-4 w-4" />}
+    </Button>
+  );
+}
+
 export function FinalCTASection() {
+  const [state, formAction] = useActionState(submitWaitlist, null);
+
   return (
     <section
       id="waitlist"
@@ -34,19 +50,30 @@ export function FinalCTASection() {
           </p>
 
           <form
-            className="mx-auto mt-8 flex max-w-md flex-col gap-3 sm:flex-row"
-            onSubmit={(e) => e.preventDefault()}
+            action={formAction}
+            className="mx-auto mt-8 flex max-w-md flex-col gap-3 sm:flex-row relative"
           >
-            <input
-              type="email"
-              placeholder="you@email.com"
-              aria-label="Email address"
-              className="h-11 flex-1 rounded-full border border-white/[0.08] bg-white/[0.03] px-5 text-sm text-white placeholder:text-zinc-600 transition-colors focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/10"
-            />
-            <Button size="lg" type="submit" className="shrink-0">
-              Get Early Access
-              <ArrowRight className="h-4 w-4" />
-            </Button>
+            <div className="flex w-full flex-col gap-2">
+              <div className="flex w-full gap-3 flex-col sm:flex-row">
+                <input
+                  type="email"
+                  name="email"
+                  required
+                  placeholder="you@email.com"
+                  aria-label="Email address"
+                  className="h-11 flex-1 rounded-full border border-white/[0.08] bg-white/[0.03] px-5 text-sm text-white placeholder:text-zinc-600 transition-colors focus:border-white/20 focus:outline-none focus:ring-1 focus:ring-white/10"
+                />
+                <SubmitButton />
+              </div>
+              
+              {/* Status Messages */}
+              {state?.error && (
+                <p className="text-sm text-red-400 text-left px-2">{state.error}</p>
+              )}
+              {state?.success && (
+                <p className="text-sm text-emerald-400 text-left px-2">{state.message}</p>
+              )}
+            </div>
           </form>
 
           <p className="mt-4 text-[12px] text-zinc-600">
