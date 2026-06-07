@@ -32,7 +32,7 @@ export async function submitWaitlist(prevState: any, formData: FormData) {
 
     // 2. Send Welcome Email via Resend
     // (Using 'onboarding@resend.dev' for testing, replace with verified domain later)
-    await resend.emails.send({
+    const { data, error: resendError } = await resend.emails.send({
       from: "Trippin <onboarding@resend.dev>",
       to: email,
       subject: "You're on the list! ✈️",
@@ -46,6 +46,13 @@ export async function submitWaitlist(prevState: any, formData: FormData) {
         </div>
       `,
     });
+
+    if (resendError) {
+      console.error("Resend API Error:", resendError);
+      // We still return success because they are in the DB, but we log the error
+    } else {
+      console.log("Email sent successfully:", data);
+    }
 
     return { success: true, message: "Success! You're on the waitlist." };
   } catch (error) {
