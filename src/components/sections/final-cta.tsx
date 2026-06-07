@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ShieldCheck, Users, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function FinalCTASection() {
@@ -52,6 +52,22 @@ export function FinalCTASection() {
           <p className="mt-4 text-[12px] text-zinc-600">
             No spam. No credit card. Just early access.
           </p>
+
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-2 text-[12px] text-zinc-400">
+            {[
+              { icon: ShieldCheck, label: "No Spam" },
+              { icon: Users, label: "Early Access Only" },
+              { icon: Zap, label: "Built For Groups" },
+            ].map((item) => (
+              <span
+                key={item.label}
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1.5"
+              >
+                <item.icon className="h-3.5 w-3.5 text-zinc-300" />
+                {item.label}
+              </span>
+            ))}
+          </div>
         </motion.div>
       </div>
     </section>

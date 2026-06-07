@@ -20,7 +20,8 @@ export function ProductPanel({
       className={cn(
         "rounded-xl border border-white/[0.08] bg-[#111113]",
         elevated && "shadow-[0_24px_80px_-12px_rgba(0,0,0,0.8)]",
-        hover && "transition-colors duration-200 hover:border-white/[0.12]",
+        hover &&
+          "hover-gradient-border hover:-translate-y-0.5",
         className
       )}
       {...props}

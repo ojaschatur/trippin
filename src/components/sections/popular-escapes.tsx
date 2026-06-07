@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { Building, Mountain, ShipWheel, Train, Trees, UtensilsCrossed } from "lucide-react";
 import { SectionHeader } from "@/components/ui/section-header";
 import { ProductPanel } from "@/components/ui/product-panel";
 
@@ -9,7 +10,11 @@ const escapes = [
     name: "Alibaug Weekend",
     match: "92% Match",
     price: "₹4200/person",
-    details: ["🚢 M2M Ferry", "🏨 Beachside Villa", "🍤 Seafood Trail"],
+    details: [
+      { icon: ShipWheel, label: "M2M Ferry" },
+      { icon: Building, label: "Beachside Villa" },
+      { icon: UtensilsCrossed, label: "Seafood Trail" },
+    ],
     gradient:
       "linear-gradient(160deg, #0c2d48 0%, #1a3a5f 40%, #0a0a0a 100%)",
   },
@@ -17,7 +22,11 @@ const escapes = [
     name: "Lonavala Escape",
     match: "89% Match",
     price: "₹3800/person",
-    details: ["🚆 Train Journey", "🏨 Hill Resort", "🥾 Trekking"],
+    details: [
+      { icon: Train, label: "Train Journey" },
+      { icon: Mountain, label: "Hill Resort" },
+      { icon: Trees, label: "Trekking" },
+    ],
     gradient:
       "linear-gradient(160deg, #0d3320 0%, #1a3d2a 40%, #0a0a0a 100%)",
   },
@@ -25,7 +34,11 @@ const escapes = [
     name: "Matheran Adventure",
     match: "85% Match",
     price: "₹3100/person",
-    details: ["🚗 Scenic Drive", "🌲 Forest Stay", "☕ Local Cafes"],
+    details: [
+      { icon: Mountain, label: "Scenic Drive" },
+      { icon: Trees, label: "Forest Stay" },
+      { icon: UtensilsCrossed, label: "Local Cafes" },
+    ],
     gradient:
       "linear-gradient(160deg, #2d1b4e 0%, #3d2a6b 40%, #0a0a0a 100%)",
   },
@@ -55,7 +68,7 @@ export function PopularEscapesSection() {
             >
               <ProductPanel
                 hover
-                className="group overflow-hidden transition-colors hover:border-white/[0.12]"
+                className="group overflow-hidden transition-colors hover:border-transparent"
               >
                 <div
                   className="relative h-40 overflow-hidden"
@@ -70,27 +83,24 @@ export function PopularEscapesSection() {
                 </div>
                 <div className="space-y-3 p-4">
                   <div>
-                    <h3 className="text-[15px] font-semibold text-white">
+                    <h3 className="text-[17px] font-semibold tracking-[-0.03em] text-white">
                       {escape.name}
                     </h3>
-                    <p className="mt-1 text-[13px] text-zinc-500">
-                      {escape.match}
-                    </p>
+                    <p className="mt-1 text-[13px] text-zinc-500">{escape.match}</p>
                   </div>
                   <div className="space-y-1.5">
                     {escape.details.map((detail) => (
-                      <div
-                        key={detail}
-                        className="flex items-center gap-2 text-[13px] text-zinc-300"
-                      >
-                        <span className="h-1.5 w-1.5 rounded-full bg-zinc-500/70" />
-                        {detail}
+                      <div key={detail.label} className="flex items-center gap-2 text-[13px] text-zinc-300">
+                        <detail.icon className="h-3.5 w-3.5 text-zinc-500" />
+                        {detail.label}
                       </div>
                     ))}
                   </div>
                   <div className="flex items-center justify-between border-t border-white/[0.06] pt-3 text-[13px]">
                     <span className="text-zinc-500">Price</span>
-                    <span className="font-medium text-white">{escape.price}</span>
+                    <span className="text-[15px] font-semibold tracking-[-0.02em] text-white">
+                      {escape.price}
+                    </span>
                   </div>
                 </div>
               </ProductPanel>

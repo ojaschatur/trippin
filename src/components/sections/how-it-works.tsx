@@ -58,10 +58,12 @@ export function HowItWorksSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ delay: i * 0.08, duration: 0.5 }}
-              className="text-center lg:text-left"
+              whileHover={{ y: -6, scale: 1.01 }}
+              className="group text-center lg:text-left"
             >
-              <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.03] lg:mx-0">
-                <step.icon className="h-4 w-4 text-zinc-400" />
+              <div className="relative mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/[0.08] bg-white/[0.03] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition-transform duration-300 group-hover:scale-105 lg:mx-0">
+                <div className="absolute inset-0 -z-10 rounded-2xl bg-[radial-gradient(circle,rgba(124,58,237,0.22),transparent_70%)] blur-xl opacity-70 transition-opacity duration-300 group-hover:opacity-100" />
+                <step.icon className="h-5 w-5 text-white drop-shadow-[0_0_14px_rgba(255,255,255,0.18)]" />
               </div>
               <h3 className="text-[15px] font-semibold text-white">
                 {step.title}

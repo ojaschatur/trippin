@@ -73,9 +73,6 @@ export function HeroSection() {
                 <ArrowRight className="h-4 w-4" />
               </a>
             </Button>
-            <Button variant="outline" size="lg" asChild>
-              <a href="#how-it-works">Watch Demo</a>
-            </Button>
           </motion.div>
         </div>
 

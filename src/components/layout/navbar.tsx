@@ -23,11 +23,16 @@ export function Navbar() {
   }, []);
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50">
+    <header
+      className={cn(
+        "fixed inset-x-0 top-0 z-50 transition-all duration-300",
+        scrolled && "border-b border-white/[0.06] bg-[#0a0a0a]/40 backdrop-blur-md"
+      )}
+    >
       <nav
         className={cn(
           "mx-auto flex max-w-6xl items-center justify-between px-5 py-5 transition-all duration-300 sm:px-8",
-          scrolled && "border-b border-white/[0.06] bg-[#0a0a0a]/80 py-4 backdrop-blur-xl"
+          scrolled && "py-4"
         )}
         aria-label="Main navigation"
       >

@@ -7,7 +7,8 @@ import {
   Users,
   Wallet,
   Brain,
-  CheckCircle2,
+  CheckCircle,
+  Sparkles,
   Ship,
   Home,
   ThumbsUp,
@@ -102,23 +103,26 @@ export function ProductCanvas() {
                     AI Analysis
                   </p>
                   <h3 className="mt-1 text-2xl font-bold text-white sm:text-3xl">
-                    Consensus Engine
+                    How the group decides
                   </h3>
                   <p className="mt-1 text-sm text-zinc-500">
                     Evaluating what the group can actually agree on.
                   </p>
                 </div>
                 <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-right">
-                  <p className="text-[10px] uppercase tracking-[0.18em] text-zinc-500">
+                  <div className="flex items-center justify-end gap-1.5 text-[10px] uppercase tracking-[0.18em] text-zinc-500">
+                    <Sparkles className="h-3 w-3 text-emerald-400" />
                     Consensus Generated
+                  </div>
+                  <p className="mt-1 text-lg font-bold text-emerald-400">
+                    92% Match
                   </p>
-                  <p className="text-lg font-bold text-emerald-400">92% Match</p>
                 </div>
               </div>
 
               <div className="mb-5 grid gap-3 sm:grid-cols-2">
                 <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-4 sm:col-span-2">
-                  <div className="mb-2 flex items-center gap-2">
+                  <div className="mb-3 flex items-center gap-2">
                     <Brain className="h-3.5 w-3.5 text-zinc-400" />
                     <span className="text-xs font-medium text-zinc-300">
                       AI Analysis
@@ -130,6 +134,7 @@ export function ProductCanvas() {
                       "Travel Time",
                       "Activity Preferences",
                       "Group Availability",
+                      "Consensus Confidence",
                     ].map((item, i) => (
                       <motion.div
                         key={item}
@@ -138,7 +143,7 @@ export function ProductCanvas() {
                         transition={{ delay: 0.7 + i * 0.08 }}
                         className="flex items-center gap-2 text-[11px] text-zinc-500"
                       >
-                        <CheckCircle2 className="h-3 w-3 text-emerald-500/80" />
+                        <CheckCircle className="h-3.5 w-3.5 text-emerald-400/90" />
                         {item}
                       </motion.div>
                     ))}
@@ -152,10 +157,10 @@ export function ProductCanvas() {
                   <p className="mt-1 text-xs text-zinc-500">Recommended:</p>
                   <div className="mt-1 flex items-end justify-between gap-3">
                     <div>
-                      <h4 className="text-xl font-bold text-white sm:text-2xl">
+                      <h4 className="text-[1.65rem] font-bold tracking-[-0.03em] text-white sm:text-[1.8rem]">
                         Alibaug
                       </h4>
-                      <p className="text-sm font-medium text-emerald-400">
+                      <p className="text-base font-medium text-emerald-400">
                         92% Match
                       </p>
                     </div>
@@ -266,7 +271,7 @@ export function ProductCanvas() {
           <ProductPanel elevated className="p-3.5">
             <div className="flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/20">
-                <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                <CheckCircle className="h-4 w-4 text-emerald-400" />
               </div>
               <div>
                 <p className="text-xs font-medium text-white">Trip Confirmed</p>

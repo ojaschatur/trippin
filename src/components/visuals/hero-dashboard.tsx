@@ -6,7 +6,7 @@ import {
   Users,
   Wallet,
   Brain,
-  CheckCircle2,
+  CheckCircle,
   Ship,
   Home,
   Loader2,
@@ -107,7 +107,7 @@ export function HeroDashboard() {
                       animate={{ scale: 1 }}
                       transition={{ delay: 1 + i * 0.2 }}
                     >
-                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                      <CheckCircle className="h-3.5 w-3.5 text-emerald-400" />
                     </motion.div>
                     <span className="text-xs text-zinc-400">{item}</span>
                   </motion.div>

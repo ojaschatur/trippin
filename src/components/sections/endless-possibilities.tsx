@@ -1,37 +1,38 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { Briefcase, Cake, Film, Palmtree, PlaneTakeoff, UtensilsCrossed } from "lucide-react";
 import { SectionHeader } from "@/components/ui/section-header";
 import { ProductPanel } from "@/components/ui/product-panel";
 
 const possibilities = [
   {
-    icon: "🍽",
+    icon: UtensilsCrossed,
     title: "Dinner Plans",
     description: "Find the restaurant everyone agrees on.",
   },
   {
-    icon: "🎬",
+    icon: Film,
     title: "Movie Night",
     description: "Choose the perfect movie for the group.",
   },
   {
-    icon: "🎉",
+    icon: Cake,
     title: "Birthday Celebrations",
     description: "Find venues and activities everyone enjoys.",
   },
   {
-    icon: "🏢",
+    icon: Briefcase,
     title: "Team Outings",
     description: "Plan stress-free corporate events.",
   },
   {
-    icon: "✈️",
+    icon: PlaneTakeoff,
     title: "Group Travel",
     description: "Coordinate budgets, preferences and logistics.",
   },
   {
-    icon: "🏖",
+    icon: Palmtree,
     title: "Weekend Escapes",
     description: "Plan trips without endless discussions.",
   },
@@ -65,14 +66,16 @@ export function EndlessPossibilitiesSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.06, duration: 0.45 }}
+              whileHover={{ y: -5, scale: 1.01 }}
             >
               <ProductPanel
                 hover
-                className="h-full p-5 transition-colors hover:border-white/[0.12]"
+                className="group h-full overflow-hidden p-5 transition-colors hover:border-transparent"
               >
                 <div className="flex items-start gap-4">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.03] text-lg">
-                    {item.icon}
+                  <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl border border-white/[0.08] bg-white/[0.04] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition-transform duration-300 group-hover:scale-105">
+                    <div className="absolute inset-0 -z-10 rounded-2xl bg-[radial-gradient(circle,rgba(59,130,246,0.2),transparent_70%)] blur-xl opacity-70 transition-opacity duration-300 group-hover:opacity-100" />
+                    <item.icon className="h-5 w-5 text-white drop-shadow-[0_0_14px_rgba(255,255,255,0.18)]" />
                   </div>
                   <div>
                     <h3 className="text-[15px] font-semibold text-white">
