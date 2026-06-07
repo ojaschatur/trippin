@@ -9,26 +9,23 @@ const steps = [
   {
     icon: Plus,
     title: "Create Trip",
-    description:
-      "Set destination range, budget, dates, and group size. Takes 60 seconds.",
+    description: "Start with a destination, outing or idea.",
   },
   {
     icon: UserPlus,
     title: "Invite Friends",
-    description:
-      "Share a link. Everyone submits preferences — no app download needed.",
+    description: "Share a link and collect everyone\'s preferences.",
   },
   {
     icon: Vote,
     title: "Everyone Votes",
-    description:
-      "Friends rank options and set deal-breakers. Trippin captures what matters.",
+    description: "Budget, activities, transport and timing.",
   },
   {
     icon: Sparkles,
-    title: "AI Finds Best Plan",
+    title: "AI Finds The Best Plan",
     description:
-      "The consensus engine weighs every preference and delivers a plan everyone loves.",
+      "The consensus engine identifies the option that works best for the entire group.",
   },
 ];
 
@@ -36,7 +33,7 @@ export function HowItWorksSection() {
   return (
     <section
       id="how-it-works"
-      className="relative border-t border-white/[0.06] py-24 sm:py-32"
+      className="relative border-t border-white/[0.06] py-20 sm:py-24"
       aria-labelledby="how-it-works-heading"
     >
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
@@ -53,7 +50,7 @@ export function HowItWorksSection() {
         />
 
         {/* Fermeon-style feature trio grid — expanded to 4 */}
-        <div className="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
+        <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
           {steps.map((step, i) => (
             <motion.div
               key={step.title}

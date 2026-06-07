@@ -1,18 +1,18 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { AnimatedCounter } from "@/components/ui/animated-counter";
+import { ProductPanel } from "@/components/ui/product-panel";
 
-const stats = [
-  { value: 50, suffix: "+", label: "Beta Testers" },
-  { value: 500, suffix: "+", label: "Trips Planned" },
-  { value: 92, suffix: "%", label: "Decision Accuracy" },
+const statements = [
+  "Designed around real planning frustrations",
+  "Launching soon",
+  "Join the first 100 testers",
 ];
 
 export function SocialProofSection() {
   return (
     <section
-      className="relative border-t border-white/[0.06] py-24 sm:py-32"
+      className="relative border-t border-white/[0.06] py-20 sm:py-24"
       aria-labelledby="social-proof-heading"
     >
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
@@ -23,23 +23,36 @@ export function SocialProofSection() {
           viewport={{ once: true }}
           className="text-center text-2xl font-semibold tracking-[-0.02em] text-white sm:text-3xl"
         >
-          Built for real groups, tested by real friends
+          Built For Real Friend Groups
         </motion.h2>
 
-        <div className="mt-12 grid gap-8 sm:grid-cols-3">
-          {stats.map((stat, i) => (
+        <p className="mx-auto mt-4 max-w-2xl text-center text-[15px] leading-relaxed text-zinc-500 sm:text-base">
+          Designed to remove the friction that makes group planning feel harder
+          than it should.
+        </p>
+
+        <div className="mt-12 grid gap-4 sm:grid-cols-3">
+          {statements.map((statement, i) => (
             <motion.div
-              key={stat.label}
+              key={statement}
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.08, duration: 0.4 }}
-              className="text-center"
+              className="h-full"
             >
-              <p className="text-4xl font-semibold tracking-tight text-white sm:text-5xl">
-                <AnimatedCounter value={stat.value} suffix={stat.suffix} />
-              </p>
-              <p className="mt-2 text-[13px] text-zinc-500">{stat.label}</p>
+              <ProductPanel className="h-full p-5 text-center">
+                <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">
+                  {i === 0
+                    ? "Built For Real Friend Groups"
+                    : i === 1
+                      ? "Launching Soon"
+                      : "Join The First 100 Testers"}
+                </p>
+                <p className="mt-3 text-[15px] leading-relaxed text-zinc-300">
+                  {statement}
+                </p>
+              </ProductPanel>
             </motion.div>
           ))}
         </div>

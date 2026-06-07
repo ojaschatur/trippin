@@ -15,7 +15,7 @@ const solutionSteps = [
 export function ProblemSection() {
   return (
     <section
-      className="relative border-t border-white/[0.06] py-24 sm:py-32"
+      className="relative border-t border-white/[0.06] py-20 sm:py-24"
       aria-labelledby="problem-heading"
     >
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
@@ -34,14 +34,16 @@ export function ProblemSection() {
             <br />
             <span className="text-white">Every. Single. Time.</span>
           </h2>
-          <p className="mx-auto mt-5 max-w-md text-[15px] leading-relaxed text-zinc-500">
-            Close a chat, lose momentum — plans vanish the second someone says
-            &ldquo;maybe later.&rdquo;
+          <p className="mx-auto mt-5 max-w-xl text-[15px] leading-relaxed text-zinc-500 sm:text-base">
+            Group plans fail because everyone has different budgets, schedules,
+            preferences and expectations.
+            <br />
+            The more people involved, the harder the decision becomes.
           </p>
         </motion.div>
 
         {/* Side-by-side product panels */}
-        <div className="mt-16 grid items-start gap-6 lg:grid-cols-2 lg:gap-8">
+        <div className="mt-14 grid items-start gap-6 lg:grid-cols-2 lg:gap-8">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}

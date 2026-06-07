@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import { SectionHeader } from "@/components/ui/section-header";
 import { ProductPanel } from "@/components/ui/product-panel";
-import { FeaturePills } from "@/components/ui/feature-pills";
 
 const friends = [
   { name: "Ojas", budget: "₹5000" },
@@ -28,7 +27,7 @@ const history = [
 export function DecisionEngineSection() {
   return (
     <section
-      className="relative border-t border-white/[0.06] py-24 sm:py-32"
+      className="relative border-t border-white/[0.06] py-20 sm:py-24"
       aria-labelledby="decision-engine-heading"
     >
       <div className="mx-auto max-w-6xl px-5 sm:px-8">
@@ -36,12 +35,12 @@ export function DecisionEngineSection() {
           label="Decision Engine"
           title={
             <>
-              <span className="text-zinc-500">The always-on consensus layer</span>
+              <span className="text-zinc-500">The Always-On Consensus Engine</span>
               <br />
-              <span className="text-white">for your friend group.</span>
+              <span className="text-white">Trippin doesn&apos;t optimize for one person.</span>
             </>
           }
-          description="Collect preferences once. Let AI find what works for everyone — not just the loudest voice."
+          description="It optimizes for the group."
           large
         />
 
@@ -194,14 +193,30 @@ export function DecisionEngineSection() {
           </ProductPanel>
         </motion.div>
 
-        <FeaturePills
-          className="mt-10"
-          items={[
-            "Preference Collection",
-            "Weighted Consensus",
-            "Deal-Breaker Detection",
-          ]}
-        />
+        <div className="mx-auto mt-10 max-w-4xl rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 sm:p-6">
+          <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-zinc-500">
+            Our AI evaluates:
+          </p>
+          <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+            {[
+              "Budget Compatibility",
+              "Travel Distance",
+              "Activity Preferences",
+              "Group Availability",
+              "Consensus Confidence",
+            ].map((item) => (
+              <div
+                key={item}
+                className="rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-center text-xs font-medium text-zinc-300"
+              >
+                {item}
+              </div>
+            ))}
+          </div>
+          <p className="mt-4 text-sm text-zinc-500">
+            and recommends the highest compatibility option.
+          </p>
+        </div>
       </div>
     </section>
   );

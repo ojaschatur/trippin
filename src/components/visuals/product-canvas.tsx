@@ -99,79 +99,87 @@ export function ProductCanvas() {
               <div className="mb-5 flex items-start justify-between">
                 <div>
                   <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-500">
-                    Consensus Result
+                    AI Analysis
                   </p>
                   <h3 className="mt-1 text-2xl font-bold text-white sm:text-3xl">
-                    Alibaug
+                    Consensus Engine
                   </h3>
+                  <p className="mt-1 text-sm text-zinc-500">
+                    Evaluating what the group can actually agree on.
+                  </p>
                 </div>
                 <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-right">
-                  <p className="text-lg font-bold text-emerald-400">92%</p>
-                  <p className="text-[9px] text-zinc-500">Match</p>
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-zinc-500">
+                    Consensus Generated
+                  </p>
+                  <p className="text-lg font-bold text-emerald-400">92% Match</p>
                 </div>
               </div>
 
-              <div className="mb-5 grid grid-cols-3 gap-2 sm:gap-3">
-                {[
-                  { icon: MapPin, label: "Origin", value: "Mumbai" },
-                  { icon: Users, label: "People", value: "6" },
-                  { icon: Wallet, label: "Budget", value: "₹5000" },
-                ].map((item, i) => (
-                  <motion.div
-                    key={item.label}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6 + i * 0.08 }}
-                    className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3"
-                  >
-                    <item.icon className="mb-1 h-3 w-3 text-zinc-600" />
-                    <p className="text-[9px] text-zinc-600">{item.label}</p>
-                    <p className="text-xs font-medium text-white">{item.value}</p>
-                  </motion.div>
-                ))}
-              </div>
-
-              <div className="mb-4 rounded-lg border border-white/[0.06] bg-white/[0.02] p-3">
-                <div className="mb-2 flex items-center gap-2">
-                  <Brain className="h-3.5 w-3.5 text-zinc-400" />
-                  <span className="text-xs font-medium text-zinc-300">
-                    AI Analysis Complete
-                  </span>
+              <div className="mb-5 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-4 sm:col-span-2">
+                  <div className="mb-2 flex items-center gap-2">
+                    <Brain className="h-3.5 w-3.5 text-zinc-400" />
+                    <span className="text-xs font-medium text-zinc-300">
+                      AI Analysis
+                    </span>
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {[
+                      "Budget Compatibility",
+                      "Travel Time",
+                      "Activity Preferences",
+                      "Group Availability",
+                    ].map((item, i) => (
+                      <motion.div
+                        key={item}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.7 + i * 0.08 }}
+                        className="flex items-center gap-2 text-[11px] text-zinc-500"
+                      >
+                        <CheckCircle2 className="h-3 w-3 text-emerald-500/80" />
+                        {item}
+                      </motion.div>
+                    ))}
+                  </div>
                 </div>
-                <div className="space-y-1.5">
+
+                <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/[0.04] p-4 sm:col-span-2">
+                  <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-500">
+                    Consensus Generated
+                  </p>
+                  <p className="mt-1 text-xs text-zinc-500">Recommended:</p>
+                  <div className="mt-1 flex items-end justify-between gap-3">
+                    <div>
+                      <h4 className="text-xl font-bold text-white sm:text-2xl">
+                        Alibaug
+                      </h4>
+                      <p className="text-sm font-medium text-emerald-400">
+                        92% Match
+                      </p>
+                    </div>
+                    <p className="text-[11px] text-zinc-500">
+                      Highest compatibility option
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-2 sm:col-span-2">
                   {[
-                    "Budget constraints",
-                    "Travel preferences",
-                    "Group availability",
-                  ].map((item, i) => (
-                    <motion.div
-                      key={item}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.8 + i * 0.1 }}
-                      className="flex items-center gap-2 text-[11px] text-zinc-500"
+                    { icon: Ship, label: "M2M Ferry" },
+                    { icon: Home, label: "Beachside Villa" },
+                    { icon: Wallet, label: "₹4700/person" },
+                  ].map((tag) => (
+                    <span
+                      key={tag.label}
+                      className="inline-flex items-center gap-1.5 rounded-md border border-white/[0.06] bg-white/[0.02] px-2.5 py-1 text-[11px] text-zinc-400"
                     >
-                      <CheckCircle2 className="h-3 w-3 text-emerald-500/80" />
-                      {item}
-                    </motion.div>
+                      <tag.icon className="h-3 w-3" />
+                      {tag.label}
+                    </span>
                   ))}
                 </div>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { icon: Ship, label: "M2M Ferry" },
-                  { icon: Home, label: "Beachside Villa" },
-                  { icon: Wallet, label: "₹4700/person" },
-                ].map((tag) => (
-                  <span
-                    key={tag.label}
-                    className="inline-flex items-center gap-1.5 rounded-md border border-white/[0.06] bg-white/[0.02] px-2.5 py-1 text-[11px] text-zinc-400"
-                  >
-                    <tag.icon className="h-3 w-3" />
-                    {tag.label}
-                  </span>
-                ))}
               </div>
             </div>
           </div>

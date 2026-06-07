@@ -19,7 +19,7 @@ export function HeroSection() {
   return (
     <section
       id="product"
-      className="relative overflow-hidden pt-32 pb-8 sm:pt-40 sm:pb-16"
+      className="relative overflow-hidden pt-32 pb-8 sm:pt-40 sm:pb-14"
       aria-labelledby="hero-heading"
     >
       <div className="relative mx-auto max-w-6xl px-5 sm:px-8">
@@ -53,10 +53,11 @@ export function HeroSection() {
             variants={fadeUp}
             initial="hidden"
             animate="show"
-            className="mx-auto mt-6 max-w-lg text-[15px] leading-relaxed text-zinc-300/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.75)] sm:text-base"
+            className="mx-auto mt-6 max-w-xl text-[15px] leading-relaxed text-zinc-200 drop-shadow-[0_1px_2px_rgba(0,0,0,0.75)] sm:text-base"
           >
-            Share a link. Collect preferences. Let AI find the option
-            everyone agrees on.
+            Your group already knows what it wants.
+            <br />
+            Trippin finds the option everyone agrees on.
           </motion.p>
 
           <motion.div
@@ -79,12 +80,12 @@ export function HeroSection() {
         </div>
 
         {/* Product canvas — ClawIn multi-panel style */}
-        <div className="relative mt-16 sm:mt-20 lg:mt-24">
+        <div className="relative mt-14 sm:mt-18 lg:mt-20">
           <ProductCanvas />
         </div>
 
         <FeaturePills
-          className="mt-10 sm:mt-14"
+          className="mt-8 sm:mt-10"
           items={[
             "Group Voting",
             "AI Consensus",

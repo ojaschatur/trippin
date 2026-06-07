@@ -8,7 +8,7 @@ export function FinalCTASection() {
   return (
     <section
       id="waitlist"
-      className="relative border-t border-white/[0.06] py-24 sm:py-32"
+      className="relative border-t border-white/[0.06] py-20 sm:py-24"
       aria-labelledby="cta-heading"
     >
       <div className="mx-auto max-w-6xl px-5 text-center sm:px-8">
@@ -22,15 +22,15 @@ export function FinalCTASection() {
             id="cta-heading"
             className="text-3xl font-semibold tracking-[-0.02em] sm:text-4xl lg:text-5xl lg:leading-[1.1]"
           >
-            <span className="text-zinc-500">
-              The fastest way to plan trips
-            </span>
+            <span className="text-white">Stop planning.</span>
             <br />
-            <span className="text-white">with friends.</span>
+            <span className="text-zinc-500">Start going.</span>
           </h2>
 
-          <p className="mx-auto mt-5 max-w-md text-[15px] text-zinc-500">
-            Join the waitlist. Early access invites rolling out weekly.
+          <p className="mx-auto mt-5 max-w-lg text-[15px] leading-relaxed text-zinc-500">
+            Your group already knows what it wants.
+            <br />
+            Trippin finds the option everyone agrees on.
           </p>
 
           <form
@@ -48,6 +48,10 @@ export function FinalCTASection() {
               <ArrowRight className="h-4 w-4" />
             </Button>
           </form>
+
+          <p className="mt-4 text-[12px] text-zinc-600">
+            No spam. No credit card. Just early access.
+          </p>
         </motion.div>
       </div>
     </section>

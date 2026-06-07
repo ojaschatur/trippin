@@ -5,6 +5,7 @@ import { ProblemSection } from "@/components/sections/problem";
 import { HowItWorksSection } from "@/components/sections/how-it-works";
 import { DecisionEngineSection } from "@/components/sections/decision-engine";
 import { PopularEscapesSection } from "@/components/sections/popular-escapes";
+import { EndlessPossibilitiesSection } from "@/components/sections/endless-possibilities";
 import { SocialProofSection } from "@/components/sections/social-proof";
 import { FinalCTASection } from "@/components/sections/final-cta";
 
@@ -18,6 +19,7 @@ export default function Home() {
         <HowItWorksSection />
         <DecisionEngineSection />
         <PopularEscapesSection />
+        <EndlessPossibilitiesSection />
         <SocialProofSection />
         <FinalCTASection />
       </main>
