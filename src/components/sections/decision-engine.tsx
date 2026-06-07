@@ -86,9 +86,7 @@ export function DecisionEngineSection() {
                     <div
                       key={item.name}
                       className={`rounded-lg px-2 py-2.5 ${
-                        item.match === "92%"
-                          ? "bg-white/[0.06]"
-                          : ""
+                        item.match === "92%" ? "bg-white/[0.06]" : ""
                       }`}
                     >
                       <p className="text-xs font-medium text-white">

@@ -139,20 +139,22 @@ export function ProductCanvas() {
                   </span>
                 </div>
                 <div className="space-y-1.5">
-                  {["Budget constraints", "Travel preferences", "Group availability"].map(
-                    (item, i) => (
-                      <motion.div
-                        key={item}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.8 + i * 0.1 }}
-                        className="flex items-center gap-2 text-[11px] text-zinc-500"
-                      >
-                        <CheckCircle2 className="h-3 w-3 text-emerald-500/80" />
-                        {item}
-                      </motion.div>
-                    )
-                  )}
+                  {[
+                    "Budget constraints",
+                    "Travel preferences",
+                    "Group availability",
+                  ].map((item, i) => (
+                    <motion.div
+                      key={item}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.8 + i * 0.1 }}
+                      className="flex items-center gap-2 text-[11px] text-zinc-500"
+                    >
+                      <CheckCircle2 className="h-3 w-3 text-emerald-500/80" />
+                      {item}
+                    </motion.div>
+                  ))}
                 </div>
               </div>
 

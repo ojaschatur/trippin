@@ -4,22 +4,22 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 disabled:pointer-events-none disabled:opacity-50 cursor-pointer",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 disabled:pointer-events-none disabled:opacity-50 cursor-pointer",
   {
     variants: {
       variant: {
         default:
-          "bg-white text-black hover:bg-zinc-200",
+          "border border-white/10 bg-[linear-gradient(135deg,#7c3aed_0%,#3b82f6_52%,#ec4899_100%)] text-white shadow-[0_18px_40px_-18px_rgba(59,130,246,0.75)] hover:-translate-y-0.5 hover:shadow-[0_22px_50px_-16px_rgba(124,58,237,0.65)] hover:brightness-110 active:translate-y-0",
         outline:
-          "border border-white/10 bg-transparent text-white hover:bg-white/5 hover:border-white/20",
-        ghost: "text-zinc-400 hover:text-white hover:bg-white/5",
+          "border border-white/20 bg-white/5 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-xl hover:-translate-y-0.5 hover:border-white/30 hover:bg-white/10 hover:shadow-[0_18px_40px_-20px_rgba(0,0,0,0.7)]",
+        ghost: "text-zinc-300 hover:text-white hover:bg-white/5",
         subtle:
-          "border border-white/[0.08] bg-white/[0.03] text-zinc-300 hover:bg-white/[0.06] hover:text-white",
+          "border border-white/[0.08] bg-white/[0.04] text-zinc-200 backdrop-blur-xl hover:bg-white/[0.08] hover:text-white",
       },
       size: {
         default: "h-10 px-5",
         sm: "h-8 px-4 text-xs",
-        lg: "h-11 px-6 text-sm",
+        lg: "h-12 px-7 text-sm",
         icon: "h-10 w-10",
       },
     },
