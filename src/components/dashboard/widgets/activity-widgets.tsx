@@ -1,12 +1,20 @@
 import { Clock, CheckCircle2, ThumbsUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export function FriendParticipationStatus() {
-  const votes = [
-    { name: "Ojas", budget: "₹5000", voted: true },
-    { name: "Rahul", budget: "₹7000", voted: true },
-    { name: "Karan", budget: "₹3500", voted: false },
-  ];
+export function FriendParticipationStatus({ participants = [], preferences = [] }: { participants?: any[], preferences?: any[] }) {
+  const votes = participants.map((p) => {
+    const pref = preferences.find(pr => pr.participant_id === p.id);
+    return {
+      name: p.name,
+      budget: pref?.max_budget ? `₹${pref.max_budget}` : "Pending",
+      voted: !!pref,
+      role: p.role
+    };
+  });
+
+  const totalMembers = participants.length;
+  const votedCount = votes.filter(v => v.voted).length;
+  const rate = totalMembers > 0 ? Math.round((votedCount / totalMembers) * 100) : 0;
 
   return (
     <div className="rounded-xl border border-white/[0.06] bg-[#111113] p-4">
@@ -15,30 +23,27 @@ export function FriendParticipationStatus() {
           Voting Status
         </p>
         <div className="flex gap-2">
-          <span className="text-[10px] font-medium text-zinc-900 bg-white px-2 py-0.5 rounded">67% Rate</span>
-          <span className="text-[10px] font-medium text-zinc-500 bg-white/[0.04] border border-white/[0.06] px-2 py-0.5 rounded flex items-center gap-1">
-            <Clock className="h-2.5 w-2.5" /> 8 min
-          </span>
+          <span className="text-[10px] font-medium text-zinc-900 bg-white px-2 py-0.5 rounded">{rate}% Rate</span>
         </div>
       </div>
 
       <div className="space-y-0">
-        {votes.map((v) => (
+        {votes.map((v, i) => (
           <div
-            key={v.name}
+            key={i}
             className={cn(
               "flex items-center justify-between border-b border-white/[0.04] py-2.5 last:border-0",
               !v.voted && "opacity-50"
             )}
           >
             <div className="flex items-center gap-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-[10px] font-bold text-white">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-[10px] font-bold text-white uppercase">
                 {v.name[0]}
               </div>
-              <span className="text-xs text-zinc-300">{v.name}</span>
+              <span className="text-xs text-zinc-300">{v.name} {v.role === 'coordinator' && <span className="text-[9px] text-zinc-500 ml-1">(Host)</span>}</span>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-[10px] text-zinc-500">{v.budget}</span>
+              <span className="text-[10px] text-zinc-500">{v.budget !== "Pending" ? v.budget : ""}</span>
               {v.voted ? (
                 <span className="flex items-center gap-1 text-[10px] text-emerald-400">
                   <CheckCircle2 className="h-3 w-3" /> Voted
@@ -53,22 +58,67 @@ export function FriendParticipationStatus() {
         ))}
       </div>
 
-      <div className="mt-2 flex items-center gap-1 text-[10px] text-emerald-400">
-        <ThumbsUp className="h-3 w-3" />
-        4/6 voted Alibaug
-      </div>
+      {votedCount > 0 && (
+        <div className="mt-2 flex items-center gap-1 text-[10px] text-emerald-400">
+          <ThumbsUp className="h-3 w-3" />
+          {votedCount}/{totalMembers} voted
+        </div>
+      )}
     </div>
   );
 }
 
-export function ConsensusTimeline() {
-  const events = [
-    { time: "10:02 AM", title: "Ojas created trip", desc: "Added 2 participants", highlight: false, done: true },
-    { time: "10:05 AM", title: "Rahul submitted preferences", desc: "Budget max: ₹6k", highlight: false, done: true },
-    { time: "10:08 AM", title: "AI generated recommendation", desc: "Found Alibaug Beach Villa", highlight: true, done: true },
-    { time: "10:12 AM", title: "Karan invited", desc: "Invitation sent via WhatsApp", highlight: false, done: true },
-    { time: "10:15 AM", title: "Waiting for additional votes", desc: "Needs 1 more vote to finalize", highlight: false, done: false },
-  ];
+export function ConsensusTimeline({ participants = [], trip, aiData }: { participants?: any[], trip?: any, aiData?: any }) {
+  
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const coordinator = participants.find(p => p.role === "coordinator");
+  const members = participants.filter(p => p.role === "member");
+
+  const events = [];
+
+  // 1. Trip Created
+  if (trip) {
+    events.push({
+      time: formatDate(trip.created_at),
+      title: `${coordinator ? coordinator.name : "Coordinator"} created trip`,
+      desc: `Targeting ${trip.target_size} people`,
+      highlight: false,
+      done: true
+    });
+  }
+
+  // 2. Members Joined
+  members.forEach(m => {
+    events.push({
+      time: formatDate(m.created_at),
+      title: `${m.name} submitted preferences`,
+      desc: "Joined via invite link",
+      highlight: false,
+      done: true
+    });
+  });
+
+  // 3. AI Consensus
+  if (aiData) {
+    events.push({
+      time: aiData.generated_at ? formatDate(aiData.generated_at) : "Just now",
+      title: "AI generated recommendation",
+      desc: `Found ${aiData.recommendation.title}`,
+      highlight: true,
+      done: true
+    });
+  } else {
+    events.push({
+      time: "--:--",
+      title: "Waiting for consensus",
+      desc: "Needs more votes or coordinator action",
+      highlight: false,
+      done: false
+    });
+  }
 
   return (
     <div className="rounded-xl border border-white/[0.06] bg-[#111113] p-4">

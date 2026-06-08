@@ -1,23 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { LogOut, Plus, Menu, X, MessageSquare, PanelLeftClose, PanelLeft, Settings } from "lucide-react";
 import { signOut } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/utils/supabase/client";
 
-// Mock data for now
-const mockTrips = [
-  { id: "1", name: "Goa 2026", date: "Oct 12, 2026", hasNew: true },
-  { id: "2", name: "Alibaug Weekend", date: "Nov 5, 2026", hasNew: false },
-];
+type SidebarTrip = {
+  id: string;
+  type: string;
+  origin: string;
+  status: string;
+  created_at: string;
+};
 
 export function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const pathname = usePathname();
+  const [trips, setTrips] = useState<SidebarTrip[]>([]);
+
+  useEffect(() => {
+    const supabase = createClient();
+    const fetchTrips = async () => {
+      const { data } = await supabase
+        .from("trips")
+        .select("id, type, origin, status, created_at")
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (data) setTrips(data);
+    };
+    fetchTrips();
+  }, [pathname]);
 
   const toggleMobileSidebar = () => setMobileOpen(!mobileOpen);
   const toggleCollapse = () => setIsCollapsed(!isCollapsed);
@@ -64,7 +81,7 @@ export function Sidebar() {
                 <button onClick={toggleCollapse} className="text-zinc-400 hover:text-white transition-colors" title="Open Sidebar">
                   <PanelLeft className="h-5 w-5" />
                 </button>
-                <Link href="/dashboard" className="text-zinc-400 hover:text-white transition-colors" title="Start New Trip">
+                <Link href="/dashboard/create" className="text-zinc-400 hover:text-white transition-colors" title="Start New Trip">
                   <Plus className="h-5 w-5" />
                 </Link>
               </div>
@@ -83,7 +100,7 @@ export function Sidebar() {
                   variant="outline"
                   asChild
                 >
-                  <Link href="/dashboard">
+                  <Link href="/dashboard/create">
                     <Plus className="h-4 w-4" />
                     Start New Trip
                   </Link>
@@ -92,7 +109,7 @@ export function Sidebar() {
             )}
           </div>
 
-          {/* Middle: Trip List */}
+           {/* Middle: Trip List */}
           <div className="flex-1 overflow-y-auto p-4 flex flex-col">
             {!isCollapsed ? (
               <>
@@ -100,8 +117,10 @@ export function Sidebar() {
                   Your Trips
                 </div>
                 <div className="flex flex-col gap-1">
-                  {mockTrips.map((trip) => {
+                  {trips.map((trip) => {
                     const isActive = pathname === `/dashboard/trips/${trip.id}`;
+                    const typeLabel = trip.type.charAt(0).toUpperCase() + trip.type.slice(1).replace(/_/g, " ");
+                    const tripName = trip.origin ? `${typeLabel} · ${trip.origin}` : typeLabel;
                     return (
                       <Link
                         key={trip.id}
@@ -116,20 +135,25 @@ export function Sidebar() {
                       >
                         <div className="flex items-center gap-3 truncate">
                           <MessageSquare className="h-4 w-4 shrink-0" />
-                          <div className="truncate">{trip.name}</div>
+                          <div className="truncate">{tripName}</div>
                         </div>
-                        {trip.hasNew && (
-                          <div className="h-2 w-2 rounded-full bg-fuchsia-500 shrink-0" title="New updates"></div>
+                        {trip.status === "collecting_preferences" && (
+                          <div className="h-2 w-2 rounded-full bg-amber-500 shrink-0" title="Collecting votes"></div>
                         )}
                       </Link>
                     );
                   })}
+                  {trips.length === 0 && (
+                    <p className="text-xs text-zinc-600 px-2 py-4">No trips yet. Start one!</p>
+                  )}
                 </div>
               </>
             ) : (
               <div className="flex flex-col items-center gap-4 mt-2">
-                 {mockTrips.map((trip) => {
+                 {trips.map((trip) => {
                     const isActive = pathname === `/dashboard/trips/${trip.id}`;
+                    const typeLabel = trip.type.charAt(0).toUpperCase() + trip.type.slice(1).replace(/_/g, " ");
+                    const tripName = trip.origin ? `${typeLabel} · ${trip.origin}` : typeLabel;
                     return (
                       <Link
                         key={trip.id}
@@ -140,11 +164,11 @@ export function Sidebar() {
                             ? "bg-white/[0.08] text-white" 
                             : "text-zinc-400 hover:bg-white/[0.04] hover:text-white"
                         )}
-                        title={trip.name}
+                        title={tripName}
                       >
                         <MessageSquare className="h-5 w-5 shrink-0" />
-                        {trip.hasNew && (
-                          <div className="absolute top-1.5 right-1.5 h-2.5 w-2.5 rounded-full bg-fuchsia-500 border-2 border-[#0a0a0a]" title="New updates"></div>
+                        {trip.status === "collecting_preferences" && (
+                          <div className="absolute top-1.5 right-1.5 h-2.5 w-2.5 rounded-full bg-amber-500 border-2 border-[#0a0a0a]" title="Collecting votes"></div>
                         )}
                       </Link>
                     );
@@ -157,7 +181,7 @@ export function Sidebar() {
           <div className="p-4 border-t border-white/[0.08] flex flex-col gap-2">
             {isCollapsed ? (
               <>
-                <Link href="/dashboard" className="flex w-full items-center justify-center p-2 rounded-lg text-zinc-400 transition-colors hover:bg-white/[0.04] hover:text-white" title="Settings">
+                <Link href="/dashboard/settings" className={cn("flex w-full items-center justify-center p-2 rounded-lg transition-colors", pathname === '/dashboard/settings' ? 'bg-white/[0.08] text-white' : 'text-zinc-400 hover:bg-white/[0.04] hover:text-white')} title="Settings">
                   <Settings className="h-5 w-5" />
                 </Link>
                 <form action={signOut}>
@@ -172,7 +196,7 @@ export function Sidebar() {
               </>
             ) : (
               <>
-                <Link href="/dashboard" className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-zinc-400 transition-colors hover:bg-white/[0.04] hover:text-white">
+                <Link href="/dashboard/settings" className={cn("flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors", pathname === '/dashboard/settings' ? 'bg-white/[0.08] text-white' : 'text-zinc-400 hover:bg-white/[0.04] hover:text-white')}>
                   <Settings className="h-4 w-4" />
                   Settings
                 </Link>

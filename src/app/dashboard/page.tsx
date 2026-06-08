@@ -1,5 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { Plane, Compass, Sparkles, Map } from "lucide-react";
 
 export default async function DashboardPage() {
@@ -30,21 +31,21 @@ export default async function DashboardPage() {
 
         {/* Suggestion Pills */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-8">
-          <div className="flex flex-col items-start p-4 rounded-xl border border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.04] transition-colors cursor-pointer text-left">
+          <Link href="/dashboard/create" className="flex flex-col items-start p-4 rounded-xl border border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.04] transition-colors cursor-pointer text-left">
             <Compass className="h-5 w-5 text-emerald-400 mb-3" />
             <div className="text-sm font-medium text-white mb-1">Weekend Getaway</div>
             <div className="text-xs text-zinc-500">Quick 2-day trips nearby</div>
-          </div>
-          <div className="flex flex-col items-start p-4 rounded-xl border border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.04] transition-colors cursor-pointer text-left">
+          </Link>
+          <Link href="/dashboard/create" className="flex flex-col items-start p-4 rounded-xl border border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.04] transition-colors cursor-pointer text-left">
             <Map className="h-5 w-5 text-violet-400 mb-3" />
             <div className="text-sm font-medium text-white mb-1">International Trip</div>
             <div className="text-xs text-zinc-500">Coordinate flights & visas</div>
-          </div>
-          <div className="flex flex-col items-start p-4 rounded-xl border border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.04] transition-colors cursor-pointer text-left">
+          </Link>
+          <Link href="/dashboard/create" className="flex flex-col items-start p-4 rounded-xl border border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.04] transition-colors cursor-pointer text-left">
             <Sparkles className="h-5 w-5 text-fuchsia-400 mb-3" />
             <div className="text-sm font-medium text-white mb-1">Surprise Me</div>
             <div className="text-xs text-zinc-500">Let the AI decide completely</div>
-          </div>
+          </Link>
         </div>
       </div>
     </div>

@@ -1,7 +1,10 @@
 import { Wallet, CheckCircle2, Brain } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export function CostBreakdown() {
+export function CostBreakdown({ aiData }: { aiData?: any }) {
+  if (!aiData) return null;
+  const { accommodation, transport, food, total } = aiData.costBreakdown;
+
   return (
     <div className="rounded-xl border border-white/[0.06] bg-[#111113] p-4">
       <div className="flex items-center justify-between mb-4">
@@ -15,38 +18,40 @@ export function CostBreakdown() {
 
       <div className="flex flex-col gap-3">
         {[
-          { emoji: "🏠", label: "Stay", cost: "₹2,500" },
-          { emoji: "🚗", label: "Transport", cost: "₹1,200" },
-          { emoji: "🍔", label: "Food", cost: "₹600" },
-          { emoji: "🏄‍♂️", label: "Activities", cost: "₹200" },
+          { emoji: "🏠", label: "Stay", cost: accommodation },
+          { emoji: "🚗", label: "Transport", cost: transport },
+          { emoji: "🍔", label: "Food", cost: food },
         ].map((item) => (
           <div key={item.label} className="flex items-center justify-between border-b border-white/[0.04] pb-2.5 last:border-0 last:pb-0">
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2.5 w-1/3 shrink-0">
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/[0.04] text-xs">
                 {item.emoji}
               </div>
               <span className="text-xs text-zinc-300">{item.label}</span>
             </div>
-            <span className="text-[11px] font-medium text-white">{item.cost}</span>
+            <span className="text-[10px] sm:text-[11px] font-medium text-white text-right leading-snug line-clamp-2">
+              {item.cost}
+            </span>
           </div>
         ))}
       </div>
 
-      <div className="mt-4 pt-3 border-t border-white/[0.06] flex items-center justify-between">
-        <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-500">Total Per Person</span>
-        <span className="text-xl font-bold text-white">₹4,500</span>
+      <div className="mt-4 pt-3 border-t border-white/[0.06] flex items-center justify-between gap-2">
+        <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-500 shrink-0">Total Per Person</span>
+        <span className="text-sm sm:text-base font-bold text-emerald-400 text-right line-clamp-2 leading-tight">
+          {total}
+        </span>
       </div>
     </div>
   );
 }
 
-export function GroupPreferenceInsights() {
+export function GroupPreferenceInsights({ aiData }: { aiData?: any }) {
+  if (!aiData) return null;
   const insights = [
     { label: "Budget Compatibility", value: 95 },
-    { label: "Travel Compatibility", value: 88 },
-    { label: "Activity Compatibility", value: 91 },
-    { label: "Food Compatibility", value: 89 },
-    { label: "Stay Preference", value: 93 },
+    { label: "Vibe Compatibility", value: 92 },
+    { label: "Overall Alignment", value: aiData.recommendation.matchScore },
   ];
 
   return (
@@ -70,22 +75,15 @@ export function GroupPreferenceInsights() {
       </div>
       
       <div className="mt-4 rounded-lg border border-white/[0.06] bg-white/[0.02] p-3 text-[11px] text-zinc-500 leading-relaxed">
-        The group is highly aligned on Budget and Stay preferences. Minor compromises were made on Travel Time to secure a beachfront property.
+        {aiData.insights.conflict || "The group is well aligned on major preferences."}
       </div>
     </div>
   );
 }
 
-export function GroupMoodSystem() {
-  const moods = [
-    { emoji: "🏖", label: "Relaxed Beach", active: true },
-    { emoji: "🎉", label: "Party", active: false },
-    { emoji: "🌲", label: "Nature", active: false },
-    { emoji: "🥾", label: "Adventure", active: false },
-    { emoji: "🍽", label: "Food Trip", active: false },
-    { emoji: "🍻", label: "Nightlife", active: false },
-  ];
-
+export function GroupMoodSystem({ aiData, tripVibes = [] }: { aiData?: any, tripVibes?: string[] }) {
+  if (!aiData) return null;
+  
   return (
     <div className="rounded-xl border border-white/[0.06] bg-[#111113] p-4">
       <p className="text-[10px] font-medium uppercase tracking-wider text-zinc-500 mb-3">
@@ -93,24 +91,18 @@ export function GroupMoodSystem() {
       </p>
 
       <div className="flex flex-wrap gap-2">
-        {moods.map((mood, i) => (
+        {tripVibes.map((vibe, i) => (
           <button
             key={i}
-            className={cn(
-              "px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all duration-200 border flex items-center gap-1.5",
-              mood.active 
-                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" 
-                : "bg-white/[0.02] border-white/[0.06] text-zinc-500 hover:bg-white/[0.04] hover:text-zinc-300"
-            )}
+            className="px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all duration-200 border flex items-center gap-1.5 bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
           >
-            <span>{mood.emoji}</span>
-            <span>{mood.label}</span>
+            <span>{vibe}</span>
           </button>
         ))}
       </div>
       
       <p className="mt-3 text-[11px] text-zinc-600 leading-relaxed">
-        AI is filtering for relaxation, beachfront, and spa availability.
+        AI Insight: {aiData.insights.mood}
       </p>
     </div>
   );

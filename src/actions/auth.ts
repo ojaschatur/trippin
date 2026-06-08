@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
+import { redirect } from "next/navigation";
 
 export async function loginWithOtp(prevState: any, formData: FormData) {
   const email = formData.get("email");
@@ -33,4 +34,5 @@ export async function loginWithOtp(prevState: any, formData: FormData) {
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
+  redirect("/login");
 }
