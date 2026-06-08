@@ -105,8 +105,8 @@ export function ConsensusTimeline({ participants = [], trip, aiData }: { partici
   if (aiData) {
     events.push({
       time: aiData.generated_at ? formatDate(aiData.generated_at) : "Just now",
-      title: "AI generated recommendation",
-      desc: `Found ${aiData.recommendation.title}`,
+      title: "AI generated recommendations",
+      desc: `Found ${aiData.recommendations?.[0]?.title || "5 top options"}`,
       highlight: true,
       done: true
     });

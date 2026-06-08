@@ -12,10 +12,43 @@ export async function POST(
     const supabase = await createClient();
     const { id: tripId } = await params;
     const body = await request.json();
-    const { message, history } = body;
+    const { message, history, senderName } = body;
+    const finalSenderName = senderName || "User";
 
     if (!message) {
       return NextResponse.json({ error: "Message is required" }, { status: 400 });
+    }
+
+    // Insert user's message into DB (for multiplayer)
+    const { data: userMsgData, error: userInsertError } = await supabase.from("trip_messages").insert({
+      trip_id: tripId,
+      sender_name: finalSenderName,
+      role: "user",
+      content: message
+    }).select().single();
+
+    if (userInsertError) {
+      console.error("Failed to insert user message:", userInsertError);
+      return NextResponse.json({ error: userInsertError.message || "Failed to save user message to database" }, { status: 500 });
+    }
+
+    const fallbackUserMsg = userMsgData || {
+      id: crypto.randomUUID(),
+      trip_id: tripId,
+      sender_name: finalSenderName,
+      role: "user",
+      content: message,
+      created_at: new Date().toISOString()
+    };
+
+    const hasAiMention = message.toLowerCase().includes("@ai");
+
+    if (!hasAiMention) {
+      return NextResponse.json({
+        success: true,
+        userMessage: fallbackUserMsg,
+        reply: null
+      });
     }
 
     // Fetch Trip & AI Recommendation
@@ -36,11 +69,12 @@ export async function POST(
       Target Budget: ${trip.budget} per person.
       Vibes: ${trip.vibes.join(", ")}.
 
-      ${trip.ai_recommendation ? `
-      You have previously generated the following recommendation:
-      Title: ${trip.ai_recommendation.recommendation.title}
-      Description: ${trip.ai_recommendation.recommendation.description}
-      Cost: ${trip.ai_recommendation.costBreakdown.total}
+      ${trip.ai_recommendation && trip.ai_recommendation.recommendations && trip.ai_recommendation.recommendations.length > 0 ? `
+      You have previously generated the following Top 5 recommendations. The #1 recommendation is:
+      Title: ${trip.ai_recommendation.recommendations[0].title}
+      Destination: ${trip.ai_recommendation.recommendations[0].destinationCity}
+      Description: ${trip.ai_recommendation.recommendations[0].description}
+      Cost: ${trip.ai_recommendation.recommendations[0].costBreakdown.total}
       ` : "You have not yet generated a final recommendation as you are still waiting on votes."}
 
       Respond to the user's message concisely and helpfully, in the persona of a proactive travel agent. Keep responses under 3 paragraphs.
@@ -48,56 +82,77 @@ export async function POST(
 
     // Convert history format if needed
     // Assuming history is an array of { role: "user" | "model", parts: [{ text: string }] }
-    // We will append the new message
     const formattedHistory = history ? history.map((msg: any) => ({
       role: msg.role === "assistant" ? "model" : "user",
       parts: [{ text: msg.content }]
     })) : [];
 
-    // Note: To use history with generateContent we might need to manually construct the prompt 
-    // or use a chat session if the SDK exposes it. For simplicity in this endpoint:
     const promptContext = formattedHistory.map((m: any) => `${m.role}: ${m.parts[0].text}`).join('\n');
     const fullPrompt = `${promptContext ? `Previous Conversation:\n${promptContext}\n\n` : ''}User: ${message}`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: fullPrompt,
-      config: {
-        systemInstruction: systemInstruction,
-      }
-    });
+    let reply = "";
+    try {
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: fullPrompt,
+        config: {
+          systemInstruction: systemInstruction,
+        }
+      });
+      reply = response.text || "";
 
-    const reply = response.text || "";
+      // Log to system_logs for developer monitoring on success
+      await supabase.from("system_logs").insert({
+        trip_id: tripId,
+        type: "ai_chat",
+        payload: {
+          prompt: fullPrompt,
+          systemInstruction,
+          response: reply
+        }
+      });
+    } catch (geminiError: any) {
+      console.error("Gemini generation failed:", geminiError);
+      reply = "⚠️ I am currently experiencing high demand. Please try again later.";
 
-    // Insert user's message into DB (for multiplayer)
-    await supabase.from("trip_messages").insert({
-      trip_id: tripId,
-      sender_name: "User", // Ideally fetched from session, but "User" for now
-      role: "user",
-      content: message
-    });
+      // Log error to system_logs
+      await supabase.from("system_logs").insert({
+        trip_id: tripId,
+        type: "system",
+        payload: {
+          error: geminiError.message || String(geminiError),
+          prompt: fullPrompt,
+          systemInstruction
+        }
+      });
+    }
 
     // Insert AI's reply into DB (for multiplayer)
-    await supabase.from("trip_messages").insert({
+    const { data: aiMsgData, error: aiInsertError } = await supabase.from("trip_messages").insert({
       trip_id: tripId,
       sender_name: "Trippin",
       role: "assistant",
       content: reply
-    });
+    }).select().single();
 
-    // Log to system_logs for developer monitoring
-    await supabase.from("system_logs").insert({
+    if (aiInsertError) {
+      console.error("Failed to insert AI reply:", aiInsertError);
+      return NextResponse.json({ error: aiInsertError.message || "Failed to save AI reply to database" }, { status: 500 });
+    }
+
+    const fallbackAiMsg = aiMsgData || {
+      id: crypto.randomUUID(),
       trip_id: tripId,
-      type: "ai_chat",
-      payload: {
-        prompt: fullPrompt,
-        systemInstruction,
-        response: reply
-      }
-    });
+      sender_name: "Trippin",
+      role: "assistant",
+      content: reply,
+      created_at: new Date().toISOString()
+    };
 
     return NextResponse.json({ 
       success: true, 
+      userMessage: fallbackUserMsg,
+      aiMessage: fallbackAiMsg,
       reply: reply 
     });
 

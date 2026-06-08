@@ -1,9 +1,9 @@
 import { Wallet, CheckCircle2, Brain } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export function CostBreakdown({ aiData }: { aiData?: any }) {
-  if (!aiData) return null;
-  const { accommodation, transport, food, total } = aiData.costBreakdown;
+export function CostBreakdown({ currentRec }: { currentRec?: any }) {
+  if (!currentRec) return null;
+  const { accommodation, transport, food, total, budgetJustification } = currentRec.costBreakdown;
 
   return (
     <div className="rounded-xl border border-white/[0.06] bg-[#111113] p-4">
@@ -42,16 +42,24 @@ export function CostBreakdown({ aiData }: { aiData?: any }) {
           {total}
         </span>
       </div>
+
+      {budgetJustification && (
+        <div className="mt-4 rounded-lg border border-white/[0.06] bg-white/[0.02] p-3 text-[11px] text-zinc-400 leading-relaxed italic">
+          <span className="font-medium text-zinc-300 block mb-1">AI Budget Strategy:</span>
+          {budgetJustification}
+        </div>
+      )}
     </div>
   );
 }
 
-export function GroupPreferenceInsights({ aiData }: { aiData?: any }) {
-  if (!aiData) return null;
+export function GroupPreferenceInsights({ aiData, currentRec }: { aiData?: any, currentRec?: any }) {
+  if (!aiData || !currentRec) return null;
+  const displayScore = currentRec.matchScore <= 1 ? Math.round(currentRec.matchScore * 100) : currentRec.matchScore;
   const insights = [
     { label: "Budget Compatibility", value: 95 },
     { label: "Vibe Compatibility", value: 92 },
-    { label: "Overall Alignment", value: aiData.recommendation.matchScore },
+    { label: "Overall Alignment", value: displayScore },
   ];
 
   return (

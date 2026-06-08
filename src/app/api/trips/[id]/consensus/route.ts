@@ -7,37 +7,44 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 const RESPONSE_SCHEMA = {
   type: "object",
   properties: {
-    recommendation: {
-      type: "object",
-      properties: {
-        title: { type: "string" },
-        description: { type: "string" },
-        matchScore: { type: "number" },
-        whyItFits: { type: "string" }
-      },
-      required: ["title", "description", "matchScore", "whyItFits"]
-    },
-    alternatives: {
+    recommendations: {
       type: "array",
       items: {
         type: "object",
         properties: {
           title: { type: "string" },
           description: { type: "string" },
-          matchScore: { type: "number" }
+          destinationCity: { type: "string" },
+          places: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                type: { type: "string", description: "Must be one of: 'stay', 'restaurant', or 'activity'" },
+                name: { type: "string" },
+                description: { type: "string" },
+                locationName: { type: "string", description: "The specific location name to geocode, e.g., 'Taj Mahal Palace, Mumbai'" },
+                googleMapsQuery: { type: "string", description: "A highly specific search string for Google Maps, e.g., 'Taj+Mahal+Palace+Hotel,+Mumbai'" }
+              },
+              required: ["type", "name", "description", "locationName", "googleMapsQuery"]
+            }
+          },
+          matchScore: { type: "number" },
+          whyItFits: { type: "string" },
+          costBreakdown: {
+            type: "object",
+            properties: {
+              accommodation: { type: "string" },
+              transport: { type: "string" },
+              food: { type: "string" },
+              total: { type: "string" },
+              budgetJustification: { type: "string" }
+            },
+            required: ["accommodation", "transport", "food", "total", "budgetJustification"]
+          }
         },
-        required: ["title", "description", "matchScore"]
+        required: ["title", "description", "destinationCity", "places", "matchScore", "whyItFits", "costBreakdown"]
       }
-    },
-    costBreakdown: {
-      type: "object",
-      properties: {
-        accommodation: { type: "string" },
-        transport: { type: "string" },
-        food: { type: "string" },
-        total: { type: "string" }
-      },
-      required: ["accommodation", "transport", "food", "total"]
     },
     insights: {
       type: "object",
@@ -49,7 +56,7 @@ const RESPONSE_SCHEMA = {
       required: ["vibe", "mood", "conflict"]
     }
   },
-  required: ["recommendation", "alternatives", "costBreakdown", "insights"]
+  required: ["recommendations", "insights"]
 };
 
 export async function POST(
@@ -59,6 +66,9 @@ export async function POST(
   try {
     const supabase = await createClient();
     const { id: tripId } = await params;
+    
+    const url = new URL(request.url);
+    const force = url.searchParams.get("force") === "true";
 
     // 1. Fetch Trip Data
     const { data: trip, error: tripError } = await supabase
@@ -85,7 +95,7 @@ export async function POST(
     }
 
     // 3. Check if we already have a cached recommendation
-    if (trip.ai_recommendation) {
+    if (trip.ai_recommendation && !force) {
       return NextResponse.json({ 
         success: true, 
         cached: true,
@@ -109,15 +119,16 @@ export async function POST(
         availability: p.availability
       })), null, 2)}
 
-      Analyze these preferences to find the best consensus recommendation. 
+      Analyze these preferences to find the best consensus recommendations. 
       Identify overlapping vibes, calculate the lowest common denominator for the budget, and accommodate any date constraints.
+      Generate EXACTLY 5 distinct, high-quality trip recommendations. Sort them from best match (index 0) to lowest match (index 4).
       Output ONLY valid JSON matching the exact schema provided.
     `;
 
     // 5. Call Gemini 2.5 Flash using the new SDK
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
-      contents: "Generate the best trip recommendation based on the system instructions.",
+      contents: "Generate EXACTLY 5 distinct trip recommendations based on the system instructions.",
       config: {
         systemInstruction: systemInstruction,
         responseMimeType: "application/json",

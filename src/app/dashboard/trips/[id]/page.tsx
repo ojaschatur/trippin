@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, use, useRef } from "react";
 import { Send, Bot, User, Sparkles, Building2, Utensils, Navigation, Clock, Loader2, Copy, Check, Share2, Users, MapPin, Calendar, Wallet, Brain } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/utils/supabase/client";
@@ -9,8 +9,8 @@ import { createClient } from "@/utils/supabase/client";
 import { 
   ShareableStatusCard, 
   TripReadinessScore, 
-  WhyThisRecommendation, 
-  AlternativeOptions 
+  WhyThisRecommendation,
+  TopPlacesList
 } from "@/components/dashboard/widgets/overview-widgets";
 import { 
   CostBreakdown, 
@@ -66,16 +66,30 @@ export default function TripPage({ params }: { params: Promise<{ id: string }> }
   
   // AI State
   const [aiData, setAiData] = useState<any>(null);
+  const [selectedRecIndex, setSelectedRecIndex] = useState(0);
   const [generatingConsensus, setGeneratingConsensus] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const [messages, setMessages] = useState<TripMessage[]>([]);
   const [isChatting, setIsChatting] = useState(false);
   const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
   const [channel, setChannel] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  const userName = currentUser?.user_metadata?.full_name || currentUser?.email?.split('@')[0] || "User";
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, typingUsers, isChatting]);
 
   // Fetch initial data
   useEffect(() => {
     const fetchData = async () => {
+      supabase.auth.getUser().then(({ data }) => {
+        if (data?.user) setCurrentUser(data.user);
+      });
+
       const [tripRes, participantsRes, prefRes, msgRes] = await Promise.all([
         supabase.from("trips").select("*").eq("id", id).single(),
         supabase.from("participants").select("*").eq("trip_id", id).order("created_at", { ascending: true }),
@@ -101,25 +115,41 @@ export default function TripPage({ params }: { params: Promise<{ id: string }> }
 
   // Real-time subscriptions
   useEffect(() => {
-    const channel = supabase
-      .channel(`trip-${id}`)
+    // 1. Messages Channel
+    const msgChannel = supabase
+      .channel(`messages-${id}`)
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'trip_messages', filter: `trip_id=eq.${id}` },
+        { event: 'INSERT', schema: 'public', table: 'trip_messages' },
         (payload) => {
-          setMessages((prev) => [...prev, payload.new as TripMessage]);
-          setIsChatting(false); // Clear typing indicator when a message arrives
+          const newMsg = payload.new as TripMessage;
+          if (newMsg.trip_id !== id) return; // Client-side filter fallback
+          
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === newMsg.id)) return prev;
+            return [...prev, newMsg];
+          });
+          setIsChatting(false); // Clear typing indicator
         }
       )
+      .subscribe();
+
+    // 2. Participants Channel
+    const partChannel = supabase
+      .channel(`participants-${id}`)
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'participants', filter: `trip_id=eq.${id}` },
         (payload) => {
-          // Re-fetch participants to ensure we get proper joining info
           supabase.from("participants").select("*").eq("trip_id", id).order("created_at", { ascending: true })
             .then(res => { if (res.data) setParticipants(res.data) });
         }
       )
+      .subscribe();
+
+    // 3. Trips Channel
+    const tripChannel = supabase
+      .channel(`trips-${id}`)
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'trips', filter: `id=eq.${id}` },
@@ -129,11 +159,16 @@ export default function TripPage({ params }: { params: Promise<{ id: string }> }
           }
         }
       )
+      .subscribe();
+
+    // 4. Broadcast Channel (Typing)
+    const broadcastChannel = supabase
+      .channel(`trip-${id}`) // Keep this name identical to where we send typing events
       .on(
         'broadcast',
         { event: 'typing' },
         (payload) => {
-          if (payload.payload.user) {
+          if (payload.payload?.user) {
             setTypingUsers(prev => {
               const newSet = new Set(prev);
               newSet.add(payload.payload.user);
@@ -151,12 +186,30 @@ export default function TripPage({ params }: { params: Promise<{ id: string }> }
       )
       .subscribe();
 
-    setChannel(channel);
+    setChannel(broadcastChannel);
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(msgChannel);
+      supabase.removeChannel(partChannel);
+      supabase.removeChannel(tripChannel);
+      supabase.removeChannel(broadcastChannel);
     };
   }, [id, supabase]);
+
+  // Fallback Polling (Guarantees sync if Realtime packets are dropped)
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      if (!id || isChatting) return; // Don't interrupt while actively sending/receiving
+      const { data } = await supabase.from("trip_messages").select("*").eq("trip_id", id).order("created_at", { ascending: true });
+      if (data && data.length > 0) {
+        setMessages(prev => {
+          if (prev.length === data.length) return prev; // Avoid unnecessary re-renders
+          return data;
+        });
+      }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [id, supabase, isChatting]);
 
   const copyInviteLink = async () => {
     const link = `${window.location.origin}/invite/${id}`;
@@ -165,10 +218,10 @@ export default function TripPage({ params }: { params: Promise<{ id: string }> }
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const generateConsensus = async () => {
+  const generateConsensus = async (force: boolean = false) => {
     setGeneratingConsensus(true);
     try {
-      const res = await fetch(`/api/trips/${id}/consensus`, { method: "POST" });
+      const res = await fetch(`/api/trips/${id}/consensus${force ? '?force=true' : ''}`, { method: "POST" });
       const json = await res.json();
       if (json.success && json.data) {
         setAiData(json.data);
@@ -186,7 +239,7 @@ export default function TripPage({ params }: { params: Promise<{ id: string }> }
       channel.send({
         type: 'broadcast',
         event: 'typing',
-        payload: { user: "Someone" } // In a real app with auth, send the actual user's name
+        payload: { user: userName } // Send the actual user's name
       });
     }
   };
@@ -199,6 +252,18 @@ export default function TripPage({ params }: { params: Promise<{ id: string }> }
     setChatInput("");
     setIsChatting(true);
 
+    // Optimistic UI Update (WhatsApp style)
+    const tempId = `temp-${Date.now()}`;
+    const optimisticMsg: TripMessage = {
+      id: tempId as any,
+      trip_id: id,
+      sender_name: userName,
+      role: "user",
+      content: userMessage,
+      created_at: new Date().toISOString()
+    };
+    setMessages(prev => [...prev, optimisticMsg]);
+
     try {
       // Pass the recent message history to the AI for context
       const historyForApi = messages.map(m => ({ role: m.role, content: m.content }));
@@ -206,10 +271,23 @@ export default function TripPage({ params }: { params: Promise<{ id: string }> }
       const res = await fetch(`/api/trips/${id}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMessage, history: historyForApi })
+        body: JSON.stringify({ message: userMessage, history: historyForApi, senderName: userName })
       });
       const json = await res.json();
-      if (!json.success) {
+      if (json.success) {
+        setMessages((prev) => {
+          // Remove the optimistic message since we're getting the real one from DB
+          const updated = prev.filter(m => m.id !== tempId);
+          if (json.userMessage && !updated.some(m => m.id === json.userMessage.id)) {
+            updated.push(json.userMessage);
+          }
+          if (json.aiMessage && !updated.some(m => m.id === json.aiMessage.id)) {
+            updated.push(json.aiMessage);
+          }
+          return updated;
+        });
+        setIsChatting(false);
+      } else {
         console.error("Chat error:", json.error);
         setIsChatting(false);
       }
@@ -337,27 +415,29 @@ export default function TripPage({ params }: { params: Promise<{ id: string }> }
           )}
 
           {/* Interactive Chat History from Database */}
-          {messages.map((msg) => (
-            <div key={msg.id} className={cn("flex gap-3 max-w-[90%]", msg.role === "user" ? "ml-auto flex-row-reverse" : "")}>
+          {messages.map((msg) => {
+            const isMe = msg.sender_name === userName;
+            return (
+            <div key={msg.id} className={cn("flex gap-3 max-w-[90%]", isMe ? "ml-auto flex-row-reverse" : "")}>
               <div className={cn(
                 "h-8 w-8 rounded-full flex items-center justify-center shrink-0 mt-1",
-                msg.role === "user" ? "bg-white/10" : "bg-emerald-500/10 border border-emerald-500/20"
+                isMe ? "bg-white/10" : msg.role === "assistant" ? "bg-emerald-500/10 border border-emerald-500/20" : "bg-blue-500/10 border border-blue-500/20"
               )}>
-                <span className={cn("text-[10px] font-bold", msg.role === "user" ? "text-white" : "text-emerald-400")}>
-                  {msg.role === "user" ? msg.sender_name.charAt(0).toUpperCase() : "Tr"}
+                <span className={cn("text-[10px] font-bold", isMe ? "text-white" : msg.role === "assistant" ? "text-emerald-400" : "text-blue-400")}>
+                  {msg.role === "assistant" ? "Tr" : msg.sender_name.charAt(0).toUpperCase()}
                 </span>
               </div>
-              <div className={cn("flex flex-col gap-1 w-full", msg.role === "user" ? "items-end" : "items-start")}>
-                <span className="text-[10px] font-medium text-zinc-500">{msg.sender_name}</span>
+              <div className={cn("flex flex-col gap-1 w-full", isMe ? "items-end" : "items-start")}>
+                <span className="text-[10px] font-medium text-zinc-500">{isMe ? "You" : msg.sender_name}</span>
                 <div className={cn(
                   "text-sm leading-relaxed p-3 rounded-xl",
-                  msg.role === "user" ? "bg-white/10 text-white rounded-tr-none" : "bg-transparent text-zinc-300"
+                  isMe ? "bg-white/10 text-white rounded-tr-none" : msg.role === "assistant" ? "bg-transparent text-zinc-300" : "bg-zinc-800 text-zinc-200 rounded-tl-none"
                 )}>
                   {msg.content}
                 </div>
               </div>
             </div>
-          ))}
+          )})}
 
           {Array.from(typingUsers).length > 0 && (
              <div className="flex gap-3 max-w-[90%]">
@@ -365,11 +445,23 @@ export default function TripPage({ params }: { params: Promise<{ id: string }> }
                <span className="text-[10px] font-bold text-zinc-300">...</span>
              </div>
              <div className="flex flex-col gap-1 w-full pt-2">
-               <span className="text-xs text-zinc-500 italic">Someone is typing...</span>
+               <span className="text-xs text-zinc-500 italic">{Array.from(typingUsers).join(", ")} is typing...</span>
              </div>
            </div>
           )}
 
+          {isChatting && (
+             <div className="flex gap-3 max-w-[90%]">
+             <div className="h-8 w-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0 mt-1">
+               <span className="text-[10px] font-bold text-emerald-400">Tr</span>
+             </div>
+             <div className="flex flex-col gap-1 w-full pt-2">
+               <span className="text-xs text-zinc-500 italic">Trippin is typing...</span>
+             </div>
+           </div>
+          )}
+
+          <div ref={messagesEndRef} />
         </div>
 
         {/* Chat Input */}
@@ -385,7 +477,7 @@ export default function TripPage({ params }: { params: Promise<{ id: string }> }
                   sendChatMessage();
                 }
               }}
-              placeholder="Tell the AI what to do..."
+              placeholder="Message group... (mention @ai to ask the coordinator)"
               className="w-full bg-transparent text-sm text-white placeholder:text-zinc-600 resize-none py-3.5 pl-4 pr-12 focus:outline-none"
             />
             <button type="submit" disabled={!chatInput.trim() || isChatting} className="absolute right-2 bottom-2 p-1.5 rounded-lg bg-white text-black hover:bg-zinc-200 transition-colors disabled:opacity-50">
@@ -457,12 +549,24 @@ export default function TripPage({ params }: { params: Promise<{ id: string }> }
                 </div>
                 <span className="text-xs text-zinc-500">{participants.length} joined</span>
               </div>
-              <button 
-                onClick={copyInviteLink}
-                className="flex items-center gap-1.5 text-[11px] font-medium text-zinc-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] px-3 py-1.5 rounded-lg transition-colors"
-              >
-                <Share2 className="h-3 w-3" /> Invite
-              </button>
+              <div className="flex items-center gap-2">
+                {aiData && (
+                  <button 
+                    onClick={() => generateConsensus(true)}
+                    disabled={generatingConsensus}
+                    className="flex items-center gap-1.5 text-[11px] font-medium text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {generatingConsensus ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                    Regenerate
+                  </button>
+                )}
+                <button 
+                  onClick={copyInviteLink}
+                  className="flex items-center gap-1.5 text-[11px] font-medium text-zinc-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] px-3 py-1.5 rounded-lg transition-colors"
+                >
+                  <Share2 className="h-3 w-3" /> Invite
+                </button>
+              </div>
             </div>
 
             {/* Tab Navigation */}
@@ -492,6 +596,38 @@ export default function TripPage({ params }: { params: Promise<{ id: string }> }
                 Map
               </button>
             </div>
+            
+            {/* Recommendation Selector (If AI Data exists) */}
+            {aiData && aiData.recommendations && (
+              <div className="flex gap-2.5 overflow-x-auto pb-2 pt-4 scrollbar-hide border-t border-white/[0.04] mt-3 -mx-5 px-5">
+                {aiData.recommendations.map((rec: any, idx: number) => (
+                  <button 
+                    key={idx}
+                    onClick={() => setSelectedRecIndex(idx)}
+                    className={cn(
+                      "px-3.5 py-2 rounded-xl text-xs whitespace-nowrap border transition-all flex items-center gap-2", 
+                      selectedRecIndex === idx 
+                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.1)]" 
+                        : "bg-[#111113] border-white/[0.06] text-zinc-400 hover:text-zinc-200 hover:border-white/[0.1]"
+                    )}
+                  >
+                    <span className={cn(
+                      "flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-bold",
+                      selectedRecIndex === idx ? "bg-emerald-500/20 text-emerald-400" : "bg-white/[0.05] text-zinc-500"
+                    )}>
+                      {idx + 1}
+                    </span>
+                    <span className="font-medium">{rec.destinationCity}</span>
+                    <span className={cn(
+                      "text-[10px] ml-1 px-1.5 py-0.5 rounded-md",
+                      selectedRecIndex === idx ? "bg-emerald-500/20 text-emerald-400" : "bg-white/[0.05] text-zinc-500"
+                    )}>
+                      {rec.matchScore}%
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* TAB CONTENT */}
@@ -499,18 +635,24 @@ export default function TripPage({ params }: { params: Promise<{ id: string }> }
             {activeTab === "overview" && (
               <div className="space-y-5">
                 {aiData ? (
-                  <>
-                    <ShareableStatusCard aiData={aiData} tripId={id} />
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-4">
-                        <WhyThisRecommendation aiData={aiData} />
-                      </div>
-                      <div className="space-y-4">
-                        <TripReadinessScore matchScore={aiData.recommendation.matchScore} />
-                        <AlternativeOptions aiData={aiData} />
-                      </div>
-                    </div>
-                  </>
+                  (() => {
+                    const currentRec = aiData.recommendations?.[selectedRecIndex];
+                    if (!currentRec) return null;
+                    return (
+                      <>
+                        <ShareableStatusCard aiData={aiData} currentRec={currentRec} tripId={id} />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-4">
+                            <WhyThisRecommendation currentRec={currentRec} />
+                          </div>
+                          <div className="space-y-4">
+                            <TripReadinessScore matchScore={currentRec.matchScore} />
+                            <TopPlacesList currentRec={currentRec} />
+                          </div>
+                        </div>
+                      </>
+                    );
+                  })()
                 ) : (
                   <div className="rounded-xl border border-dashed border-white/[0.1] p-12 flex flex-col items-center justify-center text-center">
                     <Sparkles className="h-8 w-8 text-zinc-500 mb-4 opacity-50" />
@@ -526,13 +668,19 @@ export default function TripPage({ params }: { params: Promise<{ id: string }> }
             {activeTab === "logistics" && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {aiData ? (
-                  <>
-                    <div className="space-y-4">
-                      <CostBreakdown aiData={aiData} />
-                      <GroupMoodSystem aiData={aiData} tripVibes={trip.vibes} />
-                    </div>
-                    <GroupPreferenceInsights aiData={aiData} />
-                  </>
+                  (() => {
+                    const currentRec = aiData.recommendations?.[selectedRecIndex];
+                    if (!currentRec) return null;
+                    return (
+                      <>
+                        <div className="space-y-4">
+                          <CostBreakdown currentRec={currentRec} />
+                          <GroupMoodSystem aiData={aiData} tripVibes={trip.vibes} />
+                        </div>
+                        <GroupPreferenceInsights aiData={aiData} currentRec={currentRec} />
+                      </>
+                    );
+                  })()
                 ) : (
                   <div className="col-span-full rounded-xl border border-dashed border-white/[0.1] p-12 flex flex-col items-center justify-center text-center">
                     <Brain className="h-8 w-8 text-zinc-500 mb-4 opacity-50" />
@@ -555,9 +703,16 @@ export default function TripPage({ params }: { params: Promise<{ id: string }> }
             {activeTab === "map" && (
               <div className="h-full min-h-[400px]">
                 {aiData ? (
-                  // Using aiData.recommendation.destinationCity if available (new AI schema), 
-                  // otherwise fallback to a parsed string or the origin.
-                  <MapWidget locationName={aiData.recommendation.destinationCity || aiData.recommendation.title.split(" ")[0]} />
+                  (() => {
+                    const currentRec = aiData.recommendations?.[selectedRecIndex];
+                    if (!currentRec) return null;
+                    return (
+                      <MapWidget 
+                        locationName={currentRec.destinationCity || currentRec.title.split(" ")[0]} 
+                        places={currentRec.places}
+                      />
+                    );
+                  })()
                 ) : (
                   <div className="h-full rounded-xl border border-dashed border-white/[0.1] p-12 flex flex-col items-center justify-center text-center">
                     <MapPin className="h-8 w-8 text-zinc-500 mb-4 opacity-50" />
